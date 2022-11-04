@@ -27,7 +27,17 @@ void snrt_putchar(char character) {
         buf->hdr.syscall_mem[2] = (uintptr_t)&buf->data;  // buffer
         buf->hdr.syscall_mem[3] = buf->hdr.size;          // length
 
-        tohost = (uintptr_t)buf->hdr.syscall_mem;
+        uintptr_t expected = 0;
+        uintptr_t desired = (uintptr_t)buf->hdr.syscall_mem;
+        while (!__atomic_compare_exchange_n(
+            &tohost,
+            &expected,
+            desired,
+            /*bool weak*/ 0,
+            /*int success_memorder*/__ATOMIC_ACQ_REL,
+            /*int failure_memorder*/__ATOMIC_ACQUIRE
+        )) { expected = 0; }
+        //tohost = (uintptr_t)buf->hdr.syscall_mem;
         while (fromhost == 0)
             ;
         fromhost = 0;
