@@ -126,7 +126,7 @@ extern omp_prof_t *omp_prof;
 //================================================================================
 
 #ifndef OMPSTATIC_NUMTHREADS
-static inline omp_t *omp_getData() { return omp_p; }
+static inline omp_t *omp_getData() { return (omp_t*)omp_p; }
 static inline omp_team_t *omp_get_team(omp_t *_this) {
     return &_this->plainTeam;
 }
