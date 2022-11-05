@@ -6,6 +6,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Init the data mover and load a pointer to the DM struct in to TLS.
  * Needs to be called by the DM itself and all harts that want to use the dm
@@ -72,3 +76,7 @@ void dm_wait(void);
  * @details
  */
 void dm_wait_ready(void);
+
+#ifdef __cplusplus
+} // extern "C" 
+#endif

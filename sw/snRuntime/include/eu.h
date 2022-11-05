@@ -8,6 +8,10 @@
 
 #include "snrt.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Initialize the event unit
  */
@@ -65,6 +69,10 @@ void eu_mutex_release();
  */
 uint32_t eu_get_workers_in_loop();
 uint32_t eu_get_workers_in_wfi();
+
+#ifdef __cplusplus
+} // extern "C" 
+#endif
 
 //================================================================================
 // debug

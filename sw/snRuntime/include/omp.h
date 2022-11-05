@@ -111,6 +111,10 @@ extern omp_t omp_p;
 // exported
 //================================================================================
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void omp_init(void);
 unsigned snrt_omp_bootstrap(uint32_t core_idx);
 void partialParallelRegion(int32_t argc, void *data,
@@ -118,6 +122,13 @@ void partialParallelRegion(int32_t argc, void *data,
 
 #ifdef OPENMP_PROFILE
 void omp_print_prof(void);
+#endif 
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#ifdef OPENMP_PROFILE
 extern omp_prof_t *omp_prof;
 #endif
 
