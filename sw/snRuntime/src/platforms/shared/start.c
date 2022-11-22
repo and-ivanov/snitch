@@ -11,7 +11,7 @@ extern const uint32_t _snrt_cluster_cluster_num;
 extern const uint32_t _snrt_cluster_cluster_id;
 void *const _snrt_cluster_global_offset = (void *)0x10000000;
 
-const uint32_t snrt_stack_size __attribute__((weak, section(".rodata"))) = 23;  // 8 MB per thread, as power of two
+const uint32_t snrt_stack_size __attribute__((weak, section(".rodata"))) = 23;
 
 // The boot data generated along with the system RTL.
 // See `ip/test/src/tb_lib.hh` for details.
@@ -28,18 +28,6 @@ struct snrt_cluster_bootdata {
     uint32_t s1_quadrant_count;
     uint32_t clint_base;
 };
-
-// Rudimentary string buffer for putc calls.
-extern uint32_t _edram;
-#define PUTC_BUFFER_LEN (1024 - sizeof(size_t))
-struct putc_buffer_header {
-    size_t size;
-    uint64_t syscall_mem[8];
-};
-static volatile struct putc_buffer {
-    struct putc_buffer_header hdr;
-    char data[PUTC_BUFFER_LEN];
-} *const putc_buffer = (void *)&_edram;
 
 void _snrt_init_team(uint32_t cluster_core_id, uint32_t cluster_core_num,
                      void *spm_start, void *spm_end,
@@ -77,11 +65,6 @@ void _snrt_init_team(uint32_t cluster_core_id, uint32_t cluster_core_num,
         (snrt_hartid() - _snrt_team_current->root->cluster_core_base_hartid) %
         _snrt_team_current->root->cluster_core_num;
 
-    // Initialize the string buffer. This technically doesn't belong here, but
-    // the _snrt_init_team function is called once per thread before main, so
-    // it's as good a point as any.
-    putc_buffer[snrt_hartid()].hdr.size = 0;
-
     // init peripherals
     team->peripherals.clint = (uint32_t *)bootdata->clint_base;
     team->peripherals.perf_counters =
@@ -94,6 +77,6 @@ void _snrt_init_team(uint32_t cluster_core_id, uint32_t cluster_core_num,
                      SNITCH_CLUSTER_PERIPHERAL_CL_CLINT_SET_REG_OFFSET);
 
     // Init allocator
-    snrt_alloc_init(team, sizeof(struct putc_buffer));
+    snrt_alloc_init(team);
     snrt_int_init(team);
 }

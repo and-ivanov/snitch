@@ -5,43 +5,46 @@
 
 extern uintptr_t volatile tohost, fromhost;
 
-// Rudimentary string buffer for putc calls.
-extern uint32_t _edram;
-#define PUTC_BUFFER_LEN (1024 - sizeof(size_t))
 struct putc_buffer_header {
-    size_t size;
+    int lock;
     uint64_t syscall_mem[8];
 };
-static volatile struct putc_buffer {
-    struct putc_buffer_header hdr;
-    char data[PUTC_BUFFER_LEN];
-} *const putc_buffer = (void *)&_edram;
+
+static char putc_buf[1024];
+static struct putc_buffer_header hdr;
 
 // Provide an implementation for putchar.
 void snrt_putchar(char character) {
-    volatile struct putc_buffer *buf = &putc_buffer[snrt_hartid()];
-    buf->data[buf->hdr.size++] = character;
-    if (buf->hdr.size == PUTC_BUFFER_LEN || character == '\n') {
-        buf->hdr.syscall_mem[0] = 64;  // sys_write
-        buf->hdr.syscall_mem[1] = 1;   // file descriptor (1 = stdout)
-        buf->hdr.syscall_mem[2] = (uintptr_t)&buf->data;  // buffer
-        buf->hdr.syscall_mem[3] = buf->hdr.size;          // length
+    unsigned core_idx = snrt_cluster_core_idx();
+    unsigned core_num = snrt_cluster_core_num();
 
+    int segment_start = (sizeof(putc_buf) * core_idx / core_num);
+    int segment_end = (sizeof(putc_buf) * (core_idx + 1) / core_num);
+    int segment_size = segment_end - segment_start;
+
+    uint8_t* data_size = (uint8_t*)&putc_buf[segment_start];
+    char* data_start = &putc_buf[segment_start + sizeof(*data_size)];
+    int data_max_size = segment_size - sizeof(*data_size);
+    if (data_max_size > 255) data_max_size = 255;  // prevent uint8_t overflow 
+    
+    data_start[(*data_size)++] = character;
+    if ((*data_size) == data_max_size || character == '\n') {
+        int exp = 0;
+        while (!__atomic_compare_exchange_n(&hdr.lock, &exp, 1, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE )) { exp = 0; }
+
+        hdr.syscall_mem[0] = 64;  // sys_write
+        hdr.syscall_mem[1] = 1;   // file descriptor (1 = stdout)
+        hdr.syscall_mem[2] = (uintptr_t) data_start;  // buffer
+        hdr.syscall_mem[3] = *data_size;          // length
+            
         uintptr_t expected = 0;
-        uintptr_t desired = (uintptr_t)buf->hdr.syscall_mem;
-        while (!__atomic_compare_exchange_n(
-            &tohost,
-            &expected,
-            desired,
-            /*bool weak*/ 0,
-            /*int success_memorder*/__ATOMIC_ACQ_REL,
-            /*int failure_memorder*/__ATOMIC_ACQUIRE
-        )) { expected = 0; }
-        //tohost = (uintptr_t)buf->hdr.syscall_mem;
-        while (fromhost == 0)
-            ;
-        fromhost = 0;
+        while (!__atomic_compare_exchange_n(&tohost, &expected, (uintptr_t)hdr.syscall_mem, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE )) { expected = 0; }
 
-        buf->hdr.size = 0;
+        while (__atomic_load_n(&fromhost, __ATOMIC_ACQUIRE) == 0) {}
+        __atomic_store_n(&fromhost, 0, __ATOMIC_RELEASE);
+
+        __atomic_store_n(&hdr.lock, 0, __ATOMIC_RELEASE);
+
+        *data_size = 0;
     }
 }

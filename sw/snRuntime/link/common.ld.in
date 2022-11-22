@@ -100,7 +100,6 @@ SECTIONS
   . = SEGMENT_START("ldata-segment", .);
   . = ALIGN(32 / 8);
   __BSS_END__ = .;
-  _end = .; PROVIDE (end = .);
 
   /* Uninitialized data section in DRAM */
   .dram :
@@ -108,4 +107,6 @@ SECTIONS
     *(.dram)
     _edram = .;
   } >DRAM
+  
+  _end = .; PROVIDE (end = .);
 }

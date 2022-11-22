@@ -42,7 +42,7 @@ typedef struct ident {
  @ingroup WORK_SHARING
  * Describes the loop schedule to be used for a parallel for loop.
  */
-enum sched_type : kmp_int32 {
+enum sched_type {
     kmp_sch_lower = 32, /**< lower bound for unordered values */
     kmp_sch_static_chunked = 33,
     kmp_sch_static = 34, /**< static unspecialized */
