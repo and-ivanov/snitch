@@ -34,6 +34,16 @@ macro(add_snitch_library name)
         COMMAND ${CMAKE_OBJDUMP} -dhS $<TARGET_FILE:${name}> > $<TARGET_FILE:${name}>.s)
 endmacro()
 
+macro(add_snitch_library1 name)
+    add_library(${ARGV})
+    target_link_libraries(${name} ${SNITCH_RUNTIME})
+    target_link_options(${name} PRIVATE "SHELL:-T ${LINKER_SCRIPT}")
+    add_custom_command(
+        TARGET ${name}
+        POST_BUILD
+        COMMAND ${CMAKE_OBJDUMP} -dhS $<TARGET_FILE:${name}> > $<TARGET_FILE:${name}>.s)
+endmacro()
+
 macro(add_snitch_executable name)
     add_executable(${ARGV})
     target_link_libraries(${name} ${SNITCH_RUNTIME})

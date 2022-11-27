@@ -105,7 +105,6 @@ SECTIONS
   .dram :
   {
     *(.dram)
-    _edram = .;
   } >DRAM
   
   _end = .; PROVIDE (end = .);
