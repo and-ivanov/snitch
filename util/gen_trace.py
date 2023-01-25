@@ -503,6 +503,7 @@ def annotate_snitch(extras: dict,
                 perf_metrics[-1]['start'] = cycles_past + 2
             ret.append('{} = {}'.format(csr_name, int_lit(cycles_past)))
         # Load / Store
+        perf_metrics[-1]['snitch_stores'] += 0
         if extras['is_load']:
             perf_metrics[-1]['snitch_loads'] += 1
             gpr_wb_info[extras['rd']].appendleft(cycle)
@@ -571,6 +572,7 @@ def annotate_fpu(
                 if oper_name != 'NONE':
                     ret.append('{:<4} = {}'.format(oper_name, val))
         # Load / Store requests
+        perf_metrics[curr_sec]['fpss_stores'] += 0
         if extras['lsu_q_hs']:
             s = extras['ls_size']
             if extras['is_load']:

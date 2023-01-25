@@ -1,6 +1,7 @@
 # Support for local override
 BENDER		   ?= bender
-DASM 	       ?= spike-dasm
+#DASM 	       ?= spike-dasm
+DASM=/home/fischeti/.local/bin/spike-dasm
 VLT			   ?= verilator
 
 VERILATOR_ROOT ?= $(dir $(shell which $(VLT)))/../share/verilator
