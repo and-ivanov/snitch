@@ -11,8 +11,6 @@ extern const uint32_t _snrt_cluster_cluster_num;
 extern const uint32_t _snrt_cluster_cluster_id;
 void *const _snrt_cluster_global_offset = (void *)0x10000000;
 
-const uint32_t snrt_stack_size __attribute__((weak, section(".rodata"))) = 13;
-
 // The boot data generated along with the system RTL.
 // See `ip/test/src/tb_lib.hh` for details.
 struct snrt_cluster_bootdata {

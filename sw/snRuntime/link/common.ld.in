@@ -10,8 +10,19 @@ MEMORY
     DRAM (rwxa)  : ORIGIN = @MEM_DRAM_ORIGIN@, LENGTH = @MEM_DRAM_SIZE@
 }
 
+__stack_size = 0x800000;  /* 8 MB */
+
 SECTIONS
 {
+  .stack :
+  {
+    . = ALIGN(4);
+    _stack_start = .;
+    . = . + __stack_size;
+    . = ALIGN(4);
+    _stack_end = .;
+  } >DRAM
+
   /* The program code and other data goes into DRAM */
   .text :
   {
@@ -96,16 +107,16 @@ SECTIONS
       .bss section disappears because there are no input sections. */
    . = ALIGN(. != 0 ? 32 / 8 : 1);
   } >DRAM
+  __bss_end = .;
   . = ALIGN(32 / 8);
   . = SEGMENT_START("ldata-segment", .);
   . = ALIGN(32 / 8);
-  __BSS_END__ = .;
 
   /* Uninitialized data section in DRAM */
   .dram :
   {
     *(.dram)
   } >DRAM
-  
+
   _end = .; PROVIDE (end = .);
 }
