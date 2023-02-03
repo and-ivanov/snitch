@@ -148,8 +148,12 @@ static inline const omp_team_t *omp_get_team(const omp_t *_this) {
 }
 #endif
 
-static inline unsigned omp_get_thread_num(void) {
-    return snrt_cluster_core_idx();
+inline int omp_get_thread_num(void) {
+    return snrt_cluster_compute_core_idx();
+}
+
+inline int omp_get_num_threads(void) {
+    return snrt_cluster_compute_core_num();
 }
 
 static inline void __attribute__((always_inline))
