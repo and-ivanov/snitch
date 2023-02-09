@@ -72,7 +72,13 @@ SECTIONS
   .sdata          :
   {
     __SDATA_BEGIN__ = .;
-    __global_pointer$ = . + 0x7f0;
+    /* 
+     * linker relaxation will optimize accesses to address in the range [gp-0x800, gp+0x800)
+     * magic number 0x800 comes from the fact that 
+     * RISC-V supports up to 12 bits of offset relative to global pointer
+     * see: https://www.sifive.com/blog/all-aboard-part-3-linker-relaxation-in-riscv-toolchain
+     */
+    __global_pointer$ = . + 0x800;  
     *(.srodata.cst16) *(.srodata.cst8) *(.srodata.cst4) *(.srodata.cst2) *(.srodata .srodata.*)
     *(.sdata .sdata.* .gnu.linkonce.s.*)
   } >DRAM
