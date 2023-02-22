@@ -146,3 +146,11 @@ void omp_print_prof(void) {
     printf("%-20s %d\n", "fork_oh", omp_prof->fork_oh);
 }
 #endif
+
+int omp_get_thread_num(void) {
+    return snrt_cluster_compute_core_idx();
+}
+
+int omp_get_num_threads(void) {
+    return snrt_cluster_compute_core_num();
+}

@@ -148,13 +148,9 @@ static inline const omp_team_t *omp_get_team(const omp_t *_this) {
 }
 #endif
 
-static inline int omp_get_thread_num(void) {
-    return snrt_cluster_compute_core_idx();
-}
+int omp_get_thread_num(void);
 
-static inline int omp_get_num_threads(void) {
-    return snrt_cluster_compute_core_num();
-}
+int omp_get_num_threads(void);
 
 static inline void __attribute__((always_inline))
 parallelRegionExec(int32_t argc, void *data, void (*fn)(void *, uint32_t),
