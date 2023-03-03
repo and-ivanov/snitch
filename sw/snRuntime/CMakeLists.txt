@@ -66,6 +66,7 @@ set(sources
     src/interrupt.c
     src/perf_cnt.c
     src/newlib_syscalls.c
+    src/nano_malloc.c
 )
 
 # platform specific sources

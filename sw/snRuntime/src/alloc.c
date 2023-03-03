@@ -4,6 +4,7 @@
 #include "debug.h"
 #include "snrt.h"
 #include "team.h"
+#include "nano_malloc.h"
 
 #define ALIGN_UP(addr, size) (((addr) + (size)-1) & ~((size)-1))
 #define ALIGN_DOWN(addr, size) ((addr) & ~((size)-1))
@@ -12,27 +13,22 @@
 
 /**
  * @brief Allocate a chunk of memory in the L1 memory
- * @details This currently does not support free-ing of memory
  *
  * @param size number of bytes to allocate
  * @return pointer to the allocated memory
  */
 void *snrt_l1alloc(size_t size) {
     struct snrt_allocator_inst *alloc = &snrt_current_team()->allocator.l1;
+    return alloc_malloc(alloc->base, size);
+}
 
-    size = ALIGN_UP(size, MIN_CHUNK_SIZE);
-
-    if (alloc->next + size > alloc->base + alloc->size) {
-        snrt_trace(
-            SNRT_TRACE_ALLOC,
-            "Not enough memory to allocate: base %#x size %#x next %#x\n",
-            alloc->base, alloc->size, alloc->next);
-        return 0;
-    }
-
-    void *ret = (void *)alloc->next;
-    alloc->next += size;
-    return ret;
+/**
+ * @brief Free a chunk of memory in the L1 memory
+ *
+ * @param ptr pointer to the allocated memory
+ */
+void snrt_l1free(void* ptr) {
+    alloc_free(ptr);
 }
 
 /**
@@ -61,11 +57,16 @@ void *snrt_l3alloc(size_t size) {
  */
 void snrt_alloc_init(struct snrt_team_root *team) {
     // Allocator in L1 TCDM memory
-    team->allocator.l1.base =
-        ALIGN_UP((uint32_t)team->cluster_mem.start, MIN_CHUNK_SIZE);
+    team->allocator.l1.base = (uint32_t)team->cluster_mem.start;
     team->allocator.l1.size =
         (uint32_t)(team->cluster_mem.end - team->cluster_mem.start);
     team->allocator.l1.next = team->allocator.l1.base;
+
+    alloc_init(
+        (void*)team->cluster_mem.start,
+        team->cluster_mem.end - team->cluster_mem.start
+    );
+
     // Allocator in L3 shared memory
     extern char _end;
     team->allocator.l3.base =
