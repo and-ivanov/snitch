@@ -15,15 +15,6 @@
 typedef void (*__task_type32)(_kmp_ptr32, _kmp_ptr32, _kmp_ptr32);
 typedef void (*__task_type64)(_kmp_ptr64, _kmp_ptr64, _kmp_ptr64);
 
-/**
- * @brief Usually the arguments passed to __kmpc_fork_call would do a malloc
- * with the amount of arguments passed. This is too slow for our case and thus
- * we reserve a chunk of arguments in TCDM and use it. This limits the maximum
- * number of arguments
- *
- */
-_kmp_ptr32 *kmpc_args;
-
 static void __microtask_wrapper(void *arg, uint32_t argc) {
     kmp_int32 id = omp_get_thread_num();
     kmp_int32 *id_addr = (kmp_int32 *)(&id);
@@ -72,17 +63,21 @@ static void __microtask_wrapper(void *arg, uint32_t argc) {
         case 8:
             fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
                p_argv[4], p_argv[5], p_argv[6], p_argv[7]);
+            break;
         case 9:
             fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
                p_argv[4], p_argv[5], p_argv[6], p_argv[7], p_argv[8]);
+            break;
         case 10:
             fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
                p_argv[4], p_argv[5], p_argv[6], p_argv[7], p_argv[8],
                p_argv[9]);
+            break;
         case 11:
             fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
                p_argv[4], p_argv[5], p_argv[6], p_argv[7], p_argv[8], p_argv[9],
                p_argv[10]);
+            break;
         case 12:
             fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
                p_argv[4], p_argv[5], p_argv[6], p_argv[7], p_argv[8], p_argv[9],
@@ -173,10 +168,7 @@ void __kmpc_fork_call(ident_t *loc, kmp_int32 argc, kmpc_micro microtask, ...) {
     int arg_size = 0;
     arg_size = (argc + 1) * sizeof(_kmp_ptr32);
 
-    // Do not alloc for argument pointers but use the statically alllocated
-    // kmpc_args
-    // void *args = rt_malloc(arg_size); for(int i = 0; i < arg_size;
-    // i ++) ((uint8_t*)args)[i]=0;
+    _kmp_ptr32* kmpc_args = (_kmp_ptr32*) snrt_l1alloc((argc + 1) * sizeof(_kmp_ptr32));
     // first element holds pointer to the microtask
     kmpc_args[0] = (_kmp_ptr32)microtask;
     // copy remaining varargs
@@ -206,7 +198,7 @@ void __kmpc_fork_call(ident_t *loc, kmp_int32 argc, kmpc_micro microtask, ...) {
         parallelRegion(argc, kmpc_args, __microtask_wrapper, omp->numThreads);
     }
 
-    // rt_free(args);
+    snrt_l1free(kmpc_args);
 }
 
 /*!
