@@ -19,7 +19,15 @@
  */
 void *snrt_l1alloc(size_t size) {
     struct snrt_allocator_inst *alloc = &snrt_current_team()->allocator.l1;
-    return alloc_malloc(alloc->base, size);
+    // make sure that returned pointer is aligned by allocating slightly more
+    // and keep the nonaligned memory start offset one byte before the aligned address
+    uint32_t align = 8;
+    uint32_t align_mask = align - 1;
+    char* ptr = (char*) alloc_malloc(alloc->base, size + align);
+    char* aligned_ptr = (char*)((uint32_t)(ptr + align) & (~align_mask));
+    uint8_t align_offset = (uint8_t)(aligned_ptr - ptr);
+    *(aligned_ptr - 1) = align_offset;
+    return aligned_ptr;
 }
 
 /**
@@ -28,7 +36,8 @@ void *snrt_l1alloc(size_t size) {
  * @param ptr pointer to the allocated memory
  */
 void snrt_l1free(void* ptr) {
-    alloc_free(ptr);
+    uint8_t align_offset = *((uint8_t*)ptr - 1);
+    alloc_free((char*)ptr - align_offset);
 }
 
 /**
