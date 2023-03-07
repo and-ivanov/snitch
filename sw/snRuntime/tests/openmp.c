@@ -132,7 +132,6 @@ unsigned __attribute__((noinline)) double_buffering(void) {
                         (void *)&bufy[TILESIZE * ((tile / TILESIZE + 1) % 2)],
                         (void *)&y[tile + TILESIZE], sizeof(double) * TILESIZE);
                 }
-                dm_start();
             }
 
             // compute

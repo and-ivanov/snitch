@@ -31,8 +31,7 @@ int main() {
     dm_init();
 
     if (core_idx == 0) {
-        // Wait for DM to be ready
-        dm_wait_ready();
+        // nothing
     } else if (snrt_is_dm_core()) {
         // Put DM core in its event loop
         dm_main();

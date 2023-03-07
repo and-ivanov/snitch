@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <ffi.h>
 
 #include "encoding.h"
 #include "omp.h"
@@ -22,68 +23,36 @@ static void __microtask_wrapper(void *arg, uint32_t argc) {
     // first element in args is the function pointer
     kmpc_micro fn = (kmpc_micro)((_kmp_ptr32 *)arg)[0];
     // second element in args is the pointer to the argument vector
-    _kmp_ptr32 *p_argv = &((_kmp_ptr32 *)arg)[1];
+    _kmp_ptr32 *a = &((_kmp_ptr32 *)arg)[1];
     kmp_int32 gtid = id;
 
     uint32_t cycle = read_csr(mcycle);
     OMP_PROF(if (snrt_hartid() == 1) omp_prof->fork_oh =
                  cycle - omp_prof->fork_oh);
 
-    switch (argc) {
-        default:
-            // printf("Too many args to __microtask_wrapper: %d!\n", argc);
-            snrt_exit(-1);
-        case 0:
-            fn(&gtid, id_addr);
-            break;
-        case 1:
-            fn(&gtid, id_addr, p_argv[0]);
-            break;
-        case 2:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1]);
-            break;
-        case 3:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2]);
-            break;
-        case 4:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3]);
-            break;
-        case 5:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4]);
-            break;
-        case 6:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4], p_argv[5]);
-            break;
-        case 7:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4], p_argv[5], p_argv[6]);
-            break;
-        case 8:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4], p_argv[5], p_argv[6], p_argv[7]);
-            break;
-        case 9:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4], p_argv[5], p_argv[6], p_argv[7], p_argv[8]);
-            break;
-        case 10:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4], p_argv[5], p_argv[6], p_argv[7], p_argv[8],
-               p_argv[9]);
-            break;
-        case 11:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4], p_argv[5], p_argv[6], p_argv[7], p_argv[8], p_argv[9],
-               p_argv[10]);
-            break;
-        case 12:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4], p_argv[5], p_argv[6], p_argv[7], p_argv[8], p_argv[9],
-               p_argv[10], p_argv[11]);
-            break;
+    int all_argc = 2 + argc;
+    ffi_cif call_interface;
+    ffi_type *ret_type = &ffi_type_void;
+    ffi_type *arg_types[all_argc];
+    for (int i = 0; i < all_argc; i++) {
+        arg_types[i] = &ffi_type_sint32;
+    };
+
+    if (ffi_prep_cif(&call_interface, FFI_DEFAULT_ABI, all_argc, ret_type, arg_types) == FFI_OK) {
+        kmp_int32 *global_tid = &gtid;
+        kmp_int32 *bound_tid = id_addr;
+        
+        void *arg_values[all_argc];
+        arg_values[0] = &global_tid;
+        arg_values[1] = &bound_tid;
+        for (int i = 0; i < argc; i++) {
+            arg_values[2 + i] = &a[i];
+        }
+        ffi_call(&call_interface, FFI_FN(fn), NULL, arg_values);
+    } else {
+        snrt_exit(-1);
     }
+
     // for performance tracking in traces
     cycle = read_csr(mcycle);
 }

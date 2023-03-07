@@ -8,18 +8,6 @@
 #include "snrt.h"
 
 //================================================================================
-// settings
-//================================================================================
-/**
- * @brief Usually the arguments passed to __kmpc_fork_call would to a malloc
- * with the amount of arguments passed. This is too slow for our case and thus
- * we reserve a chunk of arguments in TCDM and use it. This limits the maximum
- * number of arguments
- *
- */
-#define KMP_FORK_MAX_NARGS 12
-
-//================================================================================
 // data
 //================================================================================
 static omp_t *volatile omp_p_global;
