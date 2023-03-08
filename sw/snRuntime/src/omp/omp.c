@@ -13,7 +13,7 @@
 static omp_t *volatile omp_p_global;
 
 #ifndef OMPSTATIC_NUMTHREADS
-__thread omp_t volatile *omp_p;
+__thread omp_t *omp_p;
 #else
 omp_t omp_p = {
     .plainTeam = {.nbThreads = OMPSTATIC_NUMTHREADS},

@@ -54,7 +54,7 @@ typedef struct {
     uint32_t nreps;
     uint32_t cfg;
     uint32_t twod;
-    uint32_t* status;
+    volatile uint32_t* status;
 } dm_task_t;
 
 typedef struct {

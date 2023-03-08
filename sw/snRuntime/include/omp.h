@@ -95,7 +95,7 @@ extern omp_prof_t *omp_prof;
 #endif
 
 #ifndef OMPSTATIC_NUMTHREADS
-extern __thread omp_t volatile *omp_p;
+extern __thread omp_t *omp_p;
 #else
 extern omp_t omp_p;
 #endif

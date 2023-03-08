@@ -24,6 +24,7 @@ void *snrt_l1alloc(size_t size) {
     uint32_t align = 8;
     uint32_t align_mask = align - 1;
     char* ptr = (char*) alloc_malloc(alloc->base, size + align);
+    if (!ptr) return NULL;
     char* aligned_ptr = (char*)((uint32_t)(ptr + align) & (~align_mask));
     uint8_t align_offset = (uint8_t)(aligned_ptr - ptr);
     *(aligned_ptr - 1) = align_offset;
@@ -36,6 +37,7 @@ void *snrt_l1alloc(size_t size) {
  * @param ptr pointer to the allocated memory
  */
 void snrt_l1free(void* ptr) {
+    if (!ptr) return;
     uint8_t align_offset = *((uint8_t*)ptr - 1);
     alloc_free((char*)ptr - align_offset);
 }
