@@ -129,6 +129,10 @@ extern omp_prof_t *omp_prof;
 // inlines
 //================================================================================
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef OMPSTATIC_NUMTHREADS
 static inline omp_t *omp_getData() { return (omp_t*)omp_p; }
 static inline omp_team_t *omp_get_team(omp_t *_this) {
@@ -159,3 +163,7 @@ parallelRegion(int32_t argc, void *data, void (*fn)(void *, uint32_t),
                int num_threads) {
     partialParallelRegion(argc, data, fn, num_threads);
 }
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
