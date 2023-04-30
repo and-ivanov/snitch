@@ -72,3 +72,8 @@ void snrt_barrier(struct snrt_barrier *barr, uint32_t n) {
             ;
     }
 }
+
+uint32_t snrt_hw_barrier_addr() {
+    struct snrt_team_root *tr = snrt_current_team();
+    return tr->barrier_reg_ptr;
+}

@@ -68,6 +68,12 @@ extern void snrt_cluster_sw_barrier();
 extern void snrt_global_barrier();
 extern void snrt_barrier(struct snrt_barrier *barr, uint32_t n);
 
+uint32_t snrt_hw_barrier_addr();
+static inline void snrt_use_hw_barrier(uint32_t hw_bar_addr) {
+    uint32_t unused;
+    asm volatile("lw %0, 0(%1);" : "=r"(unused) : "r"(hw_bar_addr) : "memory");
+}
+
 static inline uint32_t __attribute__((pure)) snrt_hartid();
 struct snrt_team_root *snrt_current_team();
 extern struct snrt_peripherals *snrt_peripherals();
